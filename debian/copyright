@@ -1,0 +1,11 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: shared-array
+Source: https://gitlab.com/tenzing/shared-array
+
+Files: *
+Copyright: 2014-2017 Mathieu Mirmont <mat@parad0x.org>
+License: GPL-2
+
+Files: debian/*
+Copyright: 2017 Gijs Molenaar <gijs@pythonic.nl>
+License: MIT.

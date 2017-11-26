@@ -1,0 +1,52 @@
+Source: sharedarray
+Section: python
+Priority: optional
+Maintainer: KERN packaging <packaging@kernsuite.info>
+Build-Depends:
+ debhelper (>=9),
+ dh-python,
+ python-dev,
+ python3-dev,
+ python-setuptools,
+ python-numpy,
+ python3-numpy
+Standards-Version: 3.9.7
+Homepage: https://gitlab.com/tenzing/shared-array
+X-Python-Version: >= 2.6
+X-Python3-Version: >= 3.4
+Vcs-Git: https://github.com/kernsuite-debian/sharedarray
+Vcs-Browser: https://github.com/kernsuite-debian/sharedarray
+
+Package: python-sharedarray
+Architecture: any
+Provides: ${python:Provides}
+XB-Python-Version: ${python:Versions}
+Depends:
+ ${python:Depends},
+ ${misc:Depends},
+ ${shlibs:Depends},
+ python-numpy
+Description: share numpy arrays with other processes on the same computer
+ This is a simple python extension that lets you share numpy arrays
+ with other processes on the same computer. It uses either shared files
+ or POSIX shared memory as data stores and therefore should work on
+ most operating systems.
+ .
+ This package installs the library for Python 2.
+
+Package: python3-sharedarray
+Architecture: any
+Provides: ${python3:Provides}
+XB-Python3-Version: ${python3:Versions}
+Depends:
+ ${python3:Depends},
+ ${misc:Depends},
+ ${shlibs:Depends},
+ python3-numpy
+Description: share numpy arrays with other processes on the same computer
+ This is a simple python extension that lets you share numpy arrays
+ with other processes on the same computer. It uses either shared files
+ or POSIX shared memory as data stores and therefore should work on
+ most operating systems.
+ .
+ This package installs the library for Python 2.
