@@ -1,3 +1,3 @@
 version=3
 opts=filenamemangle=s/.*\/(\d\S+)\/archive\.tar\.gz/shared-array-$1\.tar\.gz/g \
-  https://gitlab.com/tenzing/shared-array/tags?sort=updated_desc .*(\d\S+)/archive\.tar\.gz
+  https://gitlab.com/tenzing/shared-array/tags?sort=updated_desc .*?(\d\S+)/archive\.tar\.gz
