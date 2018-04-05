@@ -1,3 +1,9 @@
+sharedarray (2.0.4-1kern1) bionicD; urgency=medium
+
+  * New upstream version 2.0.4
+
+ --  KERN packaging <packaging@kernsuite.info>  Thu, 05 Apr 2018 10:58:24 +0000
+
 sharedarray (2.0.3-1) xenial; urgency=medium
 
   * Initial release
