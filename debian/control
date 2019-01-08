@@ -9,6 +9,7 @@ Build-Depends:
  python-dev,
  python3-dev,
  python-setuptools,
+ python3-setuptools,
  python-numpy,
  python3-numpy
 Standards-Version: 3.9.7
