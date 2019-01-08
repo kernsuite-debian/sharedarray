@@ -1,3 +1,10 @@
+sharedarray (3.1.0-1) bionic; urgency=medium
+
+  [ Gijs Molenaar ]
+  * New upstream version 3.1.0
+
+ -- KERN packaging <packaging@kernsuite.info>  Tue, 08 Jan 2019 10:09:47 +0200
+
 sharedarray (2.0.4-1kern1) bionic; urgency=medium
 
   * New upstream version 2.0.4
