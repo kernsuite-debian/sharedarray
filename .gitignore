@@ -1,4 +1,6 @@
 /build
 /dist
 /MANIFEST
+/.version
 *.so
+SharedArray.egg-info

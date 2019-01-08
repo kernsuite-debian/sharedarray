@@ -25,7 +25,8 @@
 typedef struct {
 	PyObject_HEAD
 	void	*map_addr;
-	size_t	map_size;
+	size_t	 map_size;
+	char    *name;
 } PyMapOwnerObject;
 
 /* Class type definition */

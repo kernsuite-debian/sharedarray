@@ -37,7 +37,7 @@ PyStructSequence_Desc PyArrayDescObject_Desc = {
 	"ArrayDesc",
 	"Description of an attachable numpy shared array",
 	fields,
-	3,
+	sizeof (fields) / sizeof (*fields) - 1,
 };
 
 /*

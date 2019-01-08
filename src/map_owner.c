@@ -17,7 +17,10 @@
  */
 
 #include <sys/mman.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <Python.h>
+#include <structmember.h>
 #include "map_owner.h"
 
 /*
@@ -28,12 +31,15 @@ static void do_dealloc(PyMapOwnerObject *self)
 	/* Unmap the data */
 	if (munmap(self->map_addr, self->map_size) < 0)
 		PyErr_SetFromErrno(PyExc_RuntimeError);
+
+	/* Free the file name */
+	free(self->name);
 }
 
 /*
  * List of methods
  */
-static PyMethodDef methods[] = {
+static struct PyMethodDef methods[] = {
 	{ "msync", (PyCFunction) map_owner_msync,
 	  METH_VARARGS | METH_KEYWORDS,
 	  "Synchronise a file with a memory map (msync(2) wrapper)" },
@@ -50,54 +56,30 @@ static PyMethodDef methods[] = {
 };
 
 /*
+ * List of members
+ */
+static struct PyMemberDef members[] = {
+	{ "name", T_STRING, offsetof (PyMapOwnerObject, name), 0,
+	  "Name of the file used to back this array" },
+
+	{ "addr", T_PYSSIZET, offsetof (PyMapOwnerObject, map_addr), 0,
+	  "Base address of the shared array in memory" },
+
+	{ "size", T_PYSSIZET, offsetof (PyMapOwnerObject, map_size), 0,
+	  "Size of the shared array in memory" },
+
+	{ NULL, 0, 0, 0, NULL }
+};
+
+/*
  * MapOwner type definition
  */
 PyTypeObject PyMapOwner_Type = {
 	PyVarObject_HEAD_INIT(NULL, 0)
-	"shared_array.map_owner",		/* tp_name		*/
-	sizeof (PyMapOwnerObject),		/* tp_basicsize		*/
-	0,					/* tp_itemsize		*/
-	(destructor) do_dealloc,		/* tp_dealloc		*/
-	0,					/* tp_print		*/
-	0,					/* tp_getattr		*/
-	0,					/* tp_setattr		*/
-	0,					/* tp_reserved		*/
-	0,					/* tp_repr		*/
-	0,					/* tp_as_number		*/
-	0,					/* tp_as_sequence	*/
-	0,					/* tp_as_mapping	*/
-	0,					/* tp_hash		*/
-	0,					/* tp_call		*/
-	0,					/* tp_str		*/
-	0,					/* tp_getattro		*/
-	0,					/* tp_setattro		*/
-	0,					/* tp_as_buffer		*/
-	Py_TPFLAGS_DEFAULT,			/* tp_flags		*/
-	0,					/* tp_doc		*/
-	0,					/* tp_traverse		*/
-	0,					/* tp_clear		*/
-	0,					/* tp_richcompare	*/
-	0,					/* tp_weaklistoffset	*/
-	0,					/* tp_iter		*/
-	0,					/* tp_iternext		*/
-	methods,				/* tp_methods		*/
-	0,					/* tp_members		*/
-	0,					/* tp_getset		*/
-	0,					/* tp_base		*/
-	0,					/* tp_dict		*/
-	0,					/* tp_descr_get		*/
-	0,					/* tp_descr_set		*/
-	0,					/* tp_dictoffset	*/
-	0,					/* tp_init		*/
-	0,					/* tp_alloc		*/
-	0,					/* tp_new		*/
-	0,					/* tp_free		*/
-	0,					/* tp_is_gc		*/
-	0,					/* tp_bases		*/
-	0,					/* tp_mro		*/
-	0,					/* tp_cache		*/
-	0,					/* tp_subclasses	*/
-	0,					/* tp_weaklist		*/
-	0,					/* tp_del		*/
-	0,					/* tp_version_tag	*/
+	tp_name           : "shared_array.map_owner",
+	tp_basicsize      : sizeof (PyMapOwnerObject),
+	tp_dealloc        : (destructor) do_dealloc,
+	tp_flags          : Py_TPFLAGS_DEFAULT,
+	tp_methods        : methods,
+	tp_members        : members,
 };
