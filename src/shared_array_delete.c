@@ -21,6 +21,7 @@
 #define NO_IMPORT_ARRAY
 
 #include <Python.h>
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -32,39 +33,44 @@
  */
 static PyObject *do_delete(const char *name)
 {
-	struct array_meta meta;
+	struct array_meta *meta;
 	int fd;
-	int size;
+	struct stat file_info;
+	size_t map_size;
+	void *map_addr;
 
 	/* Open the file */
 	if ((fd = open_file(name, O_RDWR, 0)) < 0)
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 
-	/* Seek to the meta data location */
-	if (lseek(fd, -sizeof (meta), SEEK_END) < 0) {
+	/* Find the file size */
+	if (fstat(fd, &file_info) < 0) {
 		close(fd);
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 	}
 
-	/* Read the meta data structure */
-	size = read(fd, &meta, sizeof (meta));
-	close(fd);
+	/* Ignore short files */
+	if (file_info.st_size < sizeof (*meta)) {
+		close(fd);
+		PyErr_SetString(PyExc_IOError, "No SharedArray at this address");
+		return NULL;
+	}
+	map_size = file_info.st_size;
 
-	/* Catch read errors */
-	if (size <= 0)
+	/* Map the whole file into memory */
+	map_addr = mmap(NULL, map_size, PROT_READ, MAP_SHARED, fd, 0);
+	close(fd);
+	if (map_addr == MAP_FAILED)
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 
-	/* Catch short reads */
-	if (size != sizeof (meta)) {
-		PyErr_SetString(PyExc_IOError, "No SharedArray at this address");
-		return NULL;
-	}
-
 	/* Check the meta data */
-	if (strncmp(meta.magic, SHARED_ARRAY_MAGIC, sizeof (meta.magic))) {
+	meta = (struct array_meta *) (map_addr + (map_size - sizeof (*meta)));
+	if (strncmp(meta->magic, SHARED_ARRAY_MAGIC, sizeof (meta->magic))) {
+		munmap(map_addr, map_size);
 		PyErr_SetString(PyExc_IOError, "No SharedArray at this address");
 		return NULL;
 	}
+	munmap(map_addr, map_size);
 
 	/* Unlink the file */
 	if (unlink_file(name) < 0)

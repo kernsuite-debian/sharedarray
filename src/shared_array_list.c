@@ -1,6 +1,6 @@
 /* 
  * This file is part of SharedArray.
- * Copyright (C) 2014-2017 Mathieu Mirmont <mat@parad0x.org>
+ * Copyright (C) 2014-2018 Mathieu Mirmont <mat@parad0x.org>
  * 
  * SharedArray is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,43 +50,43 @@ struct list {
 /*
  * Read the meta data from a shared memory area
  */
-static int get_meta(const struct dirent *dirent, struct array_meta *meta)
+static int get_meta(const char *filename, struct array_meta *meta)
 {
+	struct stat file_info;
 	char path[PATH_MAX];
 	int fd;
-
-	/* Only accept regular files */
-	if (dirent->d_type != DT_REG)
-		return -1;
+	int ret = -1;
 
 	/* Construct the file name */
-	snprintf(path, sizeof (path), "%s/%s", SHMDIR, dirent->d_name);
+	snprintf(path, sizeof (path), "%s/%s", SHMDIR, filename);
 
 	/* Open the file */
-	if ((fd = open(path, O_RDONLY, 0666)) < 0)
-		return -1;
+	if ((fd = open(path, O_RDONLY)) < 0)
+		goto ret;
+
+	/* Find its size */
+	if (fstat(fd, &file_info) < 0)
+		goto ret;
+
+	/* Ignore short files */
+	if (file_info.st_size < sizeof (*meta))
+		goto ret;
 
 	/* Seek to the meta data location */
-	if (lseek(fd, -sizeof (*meta), SEEK_END) < 0) {
-		close(fd);
-		return -1;
-	}
+	if (lseek(fd, file_info.st_size - sizeof (*meta), SEEK_SET) < 0)
+		goto ret;
 
 	/* Read the meta data structure */
-	if (read(fd, meta, sizeof (*meta)) != sizeof (*meta)) {
+	if (read(fd, meta, sizeof (*meta)) != sizeof (*meta))
+		goto ret;
+
+	/* Success */
+	ret = 0;
+
+ret:	/* Cleanup before returning */
+	if (fd > 0)
 		close(fd);
-		return -1;
-	}
-
-	/* Close the file */
-	close(fd);
-
-	/* Check the meta data */
-	if (strncmp(meta->magic, SHARED_ARRAY_MAGIC, sizeof (meta->magic)))
-		return -1;
-
-	/* Accept it */
-	return 1;
+	return ret;
 }
 
 /*
@@ -132,7 +132,7 @@ static struct list *list_extend(struct list *next, struct array_meta *meta, cons
  */
 static int build_list(struct list **list)
 {
-	struct dirent *ent;
+	struct dirent *entry;
 	int size = 0;
 	DIR *dir;
 
@@ -146,14 +146,24 @@ static int build_list(struct list **list)
 	}
 
 	/* Process each directory entry */
-	while ((ent = readdir(dir))) {
+	while ((entry = readdir(dir))) {
 		struct array_meta meta;
 
+		/* Only accept regular files */
+		if (entry->d_type != DT_REG)
+			continue;
+
+		/* Get our meta-data structure out of it */
+		if (get_meta(entry->d_name, &meta) < 0)
+			continue;
+
+		/* Ignore things that aren't shared arrays */
+		if (strncmp(meta.magic, SHARED_ARRAY_MAGIC, sizeof (meta.magic)))
+			continue;
+
 		/* Add valid entries to the list */
-		if (get_meta(ent, &meta) > 0) {
-			*list = list_extend(*list, &meta, ent->d_name);
-			size++;
-		}
+		*list = list_extend(*list, &meta, entry->d_name);
+		size++;
 	}
 
 	/* Close the directory */

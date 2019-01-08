@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # This file is part of SharedArray.
-# Copyright (C) 2014-2017 Mathieu Mirmont <mat@parad0x.org>
+# Copyright (C) 2014-2018 Mathieu Mirmont <mat@parad0x.org>
 #
 # SharedArray is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,10 +16,10 @@
 # You should have received a copy of the GNU General Public License
 # along with SharedArray.  If not, see <http://www.gnu.org/licenses/>.
 
-from distutils.core import setup, Extension
-from glob import glob
-from os import path
+from setuptools import setup, Extension
+import glob
 import sys
+import os
 
 # Fail gracefully if numpy isn't installed
 try:
@@ -29,49 +29,91 @@ except:
     include_dirs = []
 
 
-# Convert a file to reStructuredText with pypandoc, when available,
-# otherwise return the raw file.
-def convert_to_rst(filename):
+def get_version():
+    """Return the version number of this package."""
+
+    # Use $CI_COMMIT_TAG is it is set. This variable comes from the
+    # GitLab CI environment and points as the git tag being built, if
+    # any. This is the path followed by official releases.
+    try:
+        return os.environ['CI_COMMIT_TAG']
+    except:
+        pass
+
+    # Read the first line of a file named .version in the project
+    # root. This file is created when creating offical releases and
+    # publishing the source tree to pypi. This is the path followed
+    # when building the source package downloaded from PyPI.
+    try:
+        return open('.version').readlines()[0].strip()
+    except:
+        pass
+
+    # Get the version from the git tree. This version string won't
+    # comply with PEP 440 but we don't care because it's not intended
+    # for distribution. This is the path followed when building the
+    # package from the git tree.
+    try:
+        import subprocess
+        command = ['git', 'describe', '--tags', '--always', '--dirty']
+        return subprocess.check_output(command)
+    except:
+        pass
+
+
+# Get the long description from the README.md file and convert it to
+# reStructuredText if pypandoc is installed.
+def get_long_description():
+    here = os.path.abspath(os.path.dirname(__file__))
+    readme = os.path.join(here, 'README.md')
+
     try:
         import pypandoc
-        return pypandoc.convert(filename, 'rst')
+        return pypandoc.convert(readme, 'rst')
 
     except ImportError:
-        return open(filename).read()
+        import codecs
+        with codecs.open(readme, encoding='utf-8') as f:
+            return f.read()
 
-setup(name    = 'SharedArray',
-      version = '2.0.4',
+setup(
+    name = 'SharedArray',
+    version = get_version(),
 
-      # Description
-      description      = 'Share numpy arrays between processes',
-      long_description = convert_to_rst('README.md'),
+    # Description
+    description = 'Share numpy arrays between processes',
+    long_description = get_long_description(),
 
-      # Contact
-      author       = 'Mathieu Mirmont',
-      author_email = 'mat@parad0x.org',
-      url          = 'https://gitlab.com/tenzing/shared-array',
+    # Contact
+    url = 'https://gitlab.com/tenzing/shared-array',
+    author = 'Mathieu Mirmont',
+    author_email = 'mat@parad0x.org',
 
-      # License
-      license   = 'https://www.gnu.org/licenses/gpl-2.0.html',
+    # Classifiers
+    classifiers = [
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'Topic :: Scientific/Engineering',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+        'Operating System :: POSIX',
+        'Operating System :: Unix',
+        'Programming Language :: C',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+    ],
+    keywords = 'numpy array shared memory shm',
 
-      # Extras for pip
-      keywords  = 'numpy array shared memory shm',
-      classifiers  = [
-          'Development Status :: 5 - Production/Stable',
-          'Intended Audience :: Developers',
-          'Intended Audience :: Science/Research',
-          'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-          'Operating System :: POSIX',
-          'Operating System :: Unix',
-          'Programming Language :: C',
-          'Topic :: Scientific/Engineering'
-      ],
-
-      # Compilation
-      install_requires=['numpy'],
-      ext_modules  = [
-          Extension('SharedArray',
-                    glob(path.join('.', 'src', '*.c')),
-                    libraries = [ 'rt' ] if sys.platform.startswith('linux') else [],
-                    include_dirs=include_dirs)
-      ])
+    # Compilation
+    install_requires = ['numpy'],
+    ext_modules = [
+        Extension('SharedArray',
+                  glob.glob(os.path.join('.', 'src', '*.c')),
+                  libraries = [ 'rt' ] if sys.platform.startswith('linux') else [],
+                  include_dirs = include_dirs)
+    ],
+)

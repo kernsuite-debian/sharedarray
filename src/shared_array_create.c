@@ -22,10 +22,12 @@
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include "shared_array.h"
 #include "map_owner.h"
 
@@ -40,6 +42,7 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 	void *map_addr;
 	int i;
 	int fd;
+	struct stat file_info;
 	PyObject *array;
 	PyMapOwnerObject *map_owner;
 
@@ -69,18 +72,27 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 	}
 
+	/* Find the actual file size after growing (on some systems it rounds
+	 * up to 4K) */
+	if (fstat(fd, &file_info) < 0) {
+		close(fd);
+		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
+	}
+	map_size = file_info.st_size;
+
 	/* Map it */
 	map_addr = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	close(fd);
 	if (map_addr == MAP_FAILED)
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 
-	/* Append meta-data to the array in memory */
-	meta = (struct array_meta *) (map_addr + size);
+	/* Append the meta-data to the array in memory */
+	meta = (struct array_meta *) (map_addr + (map_size - sizeof (*meta)));
 	strncpy(meta->magic, SHARED_ARRAY_MAGIC, sizeof (meta->magic));
-	meta->size = size;
-	meta->typenum = dtype->type_num;
-	meta->ndims = ndims;
+	meta->size     = size;
+	meta->typenum  = dtype->type_num;
+	meta->itemsize = dtype->elsize;
+	meta->ndims    = ndims;
 	for (i = 0; i < ndims; i++)
 		meta->dims[i] = dims[i];
 
@@ -89,9 +101,12 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 	PyObject_INIT((PyObject *) map_owner, &PyMapOwner_Type);
 	map_owner->map_addr = map_addr;
 	map_owner->map_size = map_size;
+	map_owner->name = strdup(name);
 
 	/* Create the array object */
-	array = PyArray_SimpleNewFromData(ndims, dims, dtype->type_num, map_addr);
+	array = PyArray_New(&PyArray_Type, meta->ndims, meta->dims,
+	                    meta->typenum, NULL, map_addr, meta->itemsize,
+	                    NPY_ARRAY_CARRAY, NULL);
 
 	/* Attach MapOwner to the array */
 	PyArray_SetBaseObject((PyArrayObject *) array, (PyObject *) map_owner);

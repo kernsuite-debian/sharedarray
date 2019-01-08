@@ -56,18 +56,6 @@ static PyMethodDef module_functions[] = {
 	  "List all existing numpy arrays from shared memory" },
 #endif
 
-	{ "msync", (PyCFunction) shared_array_msync,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "Synchronise a file with a memory map (msync(2) wrapper)" },
-
-	{ "mlock", (PyCFunction) shared_array_mlock,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "Lock the array in memory (mlock(2) wrapper)" },
-
-	{ "munlock", (PyCFunction) shared_array_munlock,
-	  METH_VARARGS | METH_KEYWORDS,
-	  "Unlock the array in memory (munlock(2) wrapper)" },
-
 	{ NULL, NULL, 0, NULL }
 };
 

@@ -27,13 +27,13 @@ before_script:
 build:python2:
   stage: build
   script:
-    - apt-get install -y libc6-dev gcc make python-numpy python-dev
+    - apt-get install -y libc6-dev gcc make python-numpy python-dev python-setuptools
     - python setup.py build_ext --inplace
 
 build:python3:
   stage: build
   script:
-    - apt-get install -y libc6-dev gcc make python3-numpy python3-dev
+    - apt-get install -y libc6-dev gcc make python3-numpy python3-dev python3-setuptools
     - python3 setup.py build_ext --inplace
 
 release:
@@ -41,7 +41,7 @@ release:
   only:
     - tags
   script:
-    - apt-get install -y python-numpy python-pypandoc ca-certificates
-    - test $(python setup.py --version) = $CI_COMMIT_TAG
-    - echo "$PYPIRC" > "$HOME/.pypirc"
-    - python setup.py sdist upload -r pypi
+    - apt-get install -y python-numpy python-setuptools python-pypandoc twine
+    - echo $CI_COMMIT_TAG > .version
+    - python setup.py sdist
+    - twine upload dist/*

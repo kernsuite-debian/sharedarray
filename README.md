@@ -57,13 +57,14 @@ object. For backward compatibility `shm://` is assumed when no prefix
 is given. Most operating systems implement strong file caching so
 using a file as a data backend won't usually affect performance.
 
-The `shape` and `dtype` arguments are the same as the numpy function
-`numpy.zeros()` and the returned array is indeed initialized to zero.
+The `shape` and `dtype` arguments are identical to those of the numpy
+function `numpy.zeros()`, and the returned array is indeed initialized
+to zeros.
 
 The content of the array lives in shared memory and/or in a file and
 won't be lost when the numpy array is deleted, nor when the python
-interpreter exits. To delete a shared array reclaim system resources
-use the `SharedArray.delete()` function.
+interpreter exits. To delete a shared array and reclaim system
+resources use the `SharedArray.delete()` function.
  
 ### SharedArray.attach(name)
 
@@ -98,46 +99,68 @@ attachment is deleted.
 
 This function returns a list of previously created arrays stored as
 POSIX SHM objects, along with their name, data type and dimensions.
-At the moment this function only works on Linux because it accesses
-files exposed under `/dev/shm`.  There doesn't seem to be a portable
-method of doing that.
-
-### SharedArray.msync(array, flags)
-
-This function is a wrapper around `msync(2)` and is only useful when
-using file-backed arrays (i.e. not POSIX shared memory). msync(2)
-flushes the mapped memory region back to the filesystem. The `flags`
-are exported as constants in the module definition (see below) and are
-a 1:1 map of the `msync(2)` flags, please refer to the manual page of
-`msync(2)` for details.
-
-### SharedArray.mlock(array)
-
-This function is a wrapper around `mlock(2)`: lock the memory map into
-RAM, preventing that memory from being paged to the swap area.
-
-### SharedArray.munlock(array)
-
-This function is a wrapper around `munlock(2)`: unlock the memory map,
-allowing that memory to be paged to the swap area.
+This function only works on Linux because it directly accesses files
+exposed under `/dev/shm`. There doesn't seem to be a portable method
+of achieving this.
 
 ## Constants
 
 ### SharedArray.MS_ASYNC
 
-Flag for `SharedArray.msync()`. Specifies that an update be scheduled,
-but the call returns immediately.
+Flag for the `msync()` method of the base object of the returned numpy
+array (see below). Specifies that an update be scheduled, but the call
+returns immediately.
 
 ### SharedArray.MS_SYNC
 
-Flag for `SharedArray.msync()`. Requests an update and waits for it to
-complete.
+Flag for the `msync()` method of the base object of the returned numpy
+array (see below). Requests an update and waits for it to complete.
 
 ### SharedArray.MS_INVALIDATE
 
-Flag for `SharedArray.msync()`. Asks to invalidate other mappings of
-the same file (so that they can be updated with the fresh values just
-written).
+Flag for the `msync()` method of the base object of the returned numpy
+array (see below). Asks to invalidate other mappings of the same file
+(so that they can be updated with the fresh values just written).
+
+## Base object
+
+SharedArray registers its own python object as the
+[base](https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.base.html)
+object of the returned numpy array. This base object exposes the
+following methods and attributes:
+
+### msync(array, flags)
+
+This method is a wrapper around `msync(2)` and is only useful when
+using file-backed arrays (i.e. not POSIX shared memory). msync(2)
+flushes the mapped memory region back to the filesystem. The `flags`
+are exported as constants in the module definition (see above) and are
+a 1:1 map of the `msync(2)` flags, please refer to the manual page of
+`msync(2)` for details.
+
+### mlock(array)
+
+This method is a wrapper around `mlock(2)`: lock the memory map into
+RAM, preventing that memory from being paged to the swap area.
+
+### munlock(array)
+
+This method is a wrapper around `munlock(2)`: unlock the memory map,
+allowing that memory to be paged to the swap area.
+
+### name
+
+This constant string is the name of the array as passed to
+`SharedArray.create()` or `SharedArray.attach()`. It may be passed to
+`SharedArray.delete()`.
+
+### addr
+
+Base address of the array in memory.
+
+### size
+
+Size of the array in memory.
 
 ## Requirements
 
@@ -147,7 +170,8 @@ written).
 
 SharedArray uses the posix shm interface (`shm_open` and `shm_unlink`)
 and so should work on most POSIX operating systems (Linux, BSD,
-etc.).
+etc.). It has been reported to work on macOS, and it is unlikely to
+work on Windows.
 
 ## Installation
 

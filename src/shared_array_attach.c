@@ -22,10 +22,12 @@
 
 #include <Python.h>
 #include <numpy/arrayobject.h>
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include "shared_array.h"
 #include "map_owner.h"
 
@@ -34,8 +36,9 @@
  */
 static PyObject *do_attach(const char *name)
 {
-	struct array_meta meta;
+	struct array_meta *meta;
 	int fd;
+	struct stat file_info;
 	size_t map_size;
 	void *map_addr;
 	PyObject *array;
@@ -45,36 +48,19 @@ static PyObject *do_attach(const char *name)
 	if ((fd = open_file(name, O_RDWR, 0)) < 0)
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 
-	/* Seek to the meta data location */
-	if (lseek(fd, -sizeof (meta), SEEK_END) < 0) {
+	/* Find the file size */
+	if (fstat(fd, &file_info) < 0) {
 		close(fd);
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 	}
 
-	/* Read the meta data structure */
-	if (read(fd, &meta, sizeof (meta)) != sizeof (meta)) {
-		close(fd);
-		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
-	}
-
-	/* Check the meta data */
-	if (strncmp(meta.magic, SHARED_ARRAY_MAGIC, sizeof (meta.magic))) {
+	/* Ignore short files */
+	if (file_info.st_size < sizeof (*meta)) {
 		close(fd);
 		PyErr_SetString(PyExc_IOError, "No SharedArray at this address");
 		return NULL;
 	}
-
-	/* Check the number of dimensions */
-	if (meta.ndims > NPY_MAXDIMS) {
-		close(fd);
-		PyErr_Format(PyExc_ValueError,
-			     "number of dimensions must be within [0, %d]",
-			     NPY_MAXDIMS);
-		return NULL;
-	}
-
-	/* Calculate the size of the mmap'd area */
-	map_size = meta.size + sizeof (meta);
+	map_size = file_info.st_size;
 
 	/* Map the array data */
 	map_addr = mmap(NULL, map_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -82,14 +68,34 @@ static PyObject *do_attach(const char *name)
 	if (map_addr == MAP_FAILED)
 		return PyErr_SetFromErrnoWithFilename(PyExc_OSError, name);
 
+	/* Check the meta data */
+	meta = (struct array_meta *) (map_addr + (map_size - sizeof (*meta)));
+	if (strncmp(meta->magic, SHARED_ARRAY_MAGIC, sizeof (meta->magic))) {
+		munmap(map_addr, map_size);
+		PyErr_SetString(PyExc_IOError, "No SharedArray at this address");
+		return NULL;
+	}
+
+	/* Check the number of dimensions */
+	if (meta->ndims > NPY_MAXDIMS) {
+		munmap(map_addr, map_size);
+		PyErr_Format(PyExc_ValueError,
+			     "number of dimensions must be within [0, %d]",
+			     NPY_MAXDIMS);
+		return NULL;
+	}
+
 	/* Hand over the memory map to a MapOwner instance */
 	map_owner = PyObject_MALLOC(sizeof (*map_owner));
 	PyObject_INIT((PyObject *) map_owner, &PyMapOwner_Type);
 	map_owner->map_addr = map_addr;
 	map_owner->map_size = map_size;
+	map_owner->name = strdup(name);
 
 	/* Create the array object */
-	array = PyArray_SimpleNewFromData(meta.ndims, meta.dims, meta.typenum, map_addr);
+	array = PyArray_New(&PyArray_Type, meta->ndims, meta->dims,
+	                    meta->typenum, NULL, map_addr, meta->itemsize,
+	                    NPY_ARRAY_CARRAY, NULL);
 
 	/* Attach MapOwner to the array */
 	PyArray_SetBaseObject((PyArrayObject *) array, (PyObject *) map_owner);
