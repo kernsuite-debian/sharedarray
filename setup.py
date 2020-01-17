@@ -56,7 +56,7 @@ def get_version():
     try:
         import subprocess
         command = ['git', 'describe', '--tags', '--always', '--dirty']
-        return subprocess.check_output(command)
+        return str(subprocess.check_output(command))
     except:
         pass
 

@@ -215,6 +215,24 @@ Also you can make the change permanent, on next boot, by setting
 `SHM_SIZE=100%` in `/etc/defaults/tmpfs` on recent Debian
 installations.
 
+### On Linux, I get "Cannot allocate memory" when creating many arrays.
+
+SharedArray uses one memory map per array that is attached (or
+created). By default the maximum number of memory maps per process is
+set by the Linux kernel to 65530. If you want to create more arrays
+than that you need to tune the kernel parameter `vm.max_map_count` and
+set it to a higher value.
+
+```sh
+/sbin/sysctl vm.max_map_count=655300
+```
+
+Note that for the change to be permanent you need to add this line to
+`/etc/sysctl.conf`:
+```sh
+vm.max_map_count=655300
+```
+
 ### I can't attach old (pre 0.4) arrays anymore.
 
 Since version 0.4 all arrays are now page aligned in memory, to be
