@@ -12,7 +12,7 @@ Build-Depends:
  python3-setuptools,
  python-numpy,
  python3-numpy
-Standards-Version: 3.9.7
+Standards-Version: 4.4.1
 Homepage: https://gitlab.com/tenzing/shared-array
 X-Python-Version: >= 2.6
 X-Python3-Version: >= 3.4
@@ -51,4 +51,4 @@ Description: share numpy arrays with other processes on the same computer
  or POSIX shared memory as data stores and therefore should work on
  most operating systems.
  .
- This package installs the library for Python 2.
+ This package installs the library for Python 3.
