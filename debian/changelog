@@ -1,3 +1,10 @@
+sharedarray (3.2.1-1kern1) bionic; urgency=medium
+
+  [ Athanaseus Javas Ramaila ]
+  * New upstream version 3.2.1
+
+ -- KERN packaging <packaging@kernsuite.info>  Fri, 15 May 2020 12:57:06 +0200
+
 sharedarray (3.2.0-1kern1) bionic; urgency=medium
 
   [ Athanaseus Javas Ramaila ]
