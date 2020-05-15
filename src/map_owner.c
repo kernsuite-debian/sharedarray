@@ -1,6 +1,6 @@
 /* 
  * This file is part of SharedArray.
- * Copyright (C) 2014-2017 Mathieu Mirmont <mat@parad0x.org>
+ * Copyright (C) 2014-2020 Mathieu Mirmont <mat@parad0x.org>
  * 
  * SharedArray is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,9 @@ static void do_dealloc(PyMapOwnerObject *self)
 
 	/* Free the file name */
 	free(self->name);
+
+	/* Free the object */
+	Py_TYPE(self)->tp_free((PyObject*) self);
 }
 
 /*
