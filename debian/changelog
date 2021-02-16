@@ -1,3 +1,11 @@
+sharedarray (3.2.1-1kern2) focal; urgency=medium
+
+  [ Athanaseus Javas Ramaila ]
+  * Drop python2 support
+  * Build for focal
+
+ -- KERN packaging <packaging@kernsuite.info>  Tue, 16 Feb 2021 09:01:53 +0000
+
 sharedarray (3.2.1-1kern1) bionic; urgency=medium
 
   [ Athanaseus Javas Ramaila ]
