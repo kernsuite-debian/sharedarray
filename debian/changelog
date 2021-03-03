@@ -1,3 +1,10 @@
+sharedarray (3.2.1-1kern3) focal; urgency=medium
+
+  [ Athanaseus Javas Ramaila ]
+  * Bump version
+
+ -- KERN packaging <packaging@kernsuite.info>  Wed, 03 Mar 2021 12:40:28 +0000
+
 sharedarray (3.2.1-1kern2) focal; urgency=medium
 
   [ Athanaseus Javas Ramaila ]
