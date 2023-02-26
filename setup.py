@@ -36,7 +36,7 @@ def get_version():
     # GitLab CI environment and points as the git tag being built, if
     # any. This is the path followed by official releases.
     try:
-        return os.environ['CI_COMMIT_TAG']
+        return os.environ['SHARED_ARRAY_VERSION']
     except:
         pass
 

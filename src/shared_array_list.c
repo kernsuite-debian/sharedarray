@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of SharedArray.
  * Copyright (C) 2014-2018 Mathieu Mirmont <mat@parad0x.org>
- * 
+ *
  * SharedArray is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * SharedArray is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with SharedArray.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -69,7 +69,7 @@ static int get_meta(const char *filename, struct array_meta *meta)
 		goto ret;
 
 	/* Ignore short files */
-	if (file_info.st_size < sizeof (*meta))
+	if (file_info.st_size < (off_t) sizeof (*meta))
 		goto ret;
 
 	/* Seek to the meta data location */
@@ -108,6 +108,11 @@ static PyObject *convert_dims(int ndims, npy_intp *dims)
 static struct list *list_extend(struct list *next, struct array_meta *meta, const char *name)
 {
 	struct list *list;
+	npy_intp dims[NPY_MAXDIMS];
+
+	/* Copy the dims[] array out of the packed structure */
+	for (int i = 0; i < meta->ndims; i++)
+		dims[i] = meta->dims[i];
 
 	/* Allocate the new list element */
 	if (!(list = malloc(sizeof (*list)))) {
@@ -121,7 +126,7 @@ static struct list *list_extend(struct list *next, struct array_meta *meta, cons
 
 	PyStructSequence_SET_ITEM(list->desc, 0, PyBytes_FromString(name));
 	PyStructSequence_SET_ITEM(list->desc, 1, PyArray_TypeObjectFromType(meta->typenum));
-	PyStructSequence_SET_ITEM(list->desc, 2, convert_dims(meta->ndims, meta->dims));
+	PyStructSequence_SET_ITEM(list->desc, 2, convert_dims(meta->ndims, dims));
 
 	/* Return the new element */
 	return list;
@@ -138,7 +143,7 @@ static int build_list(struct list **list)
 
 	/* Start the list */
 	*list = NULL;
-	
+
 	/* Open the directory */
 	if (!(dir = opendir(SHMDIR))) {
 		PyErr_SetFromErrnoWithFilename(PyExc_OSError, SHMDIR);
