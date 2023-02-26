@@ -1,3 +1,10 @@
+sharedarray (3.2.2-1kern1) focal; urgency=medium
+
+  [ Athanaseus Javas Ramaila ]
+  * New upstream version 3.2.2
+
+ -- KERN packaging <packaging@kernsuite.info>  Sun, 26 Feb 2023 17:30:08 +0000
+
 sharedarray (3.2.1-1kern3) focal; urgency=medium
 
   [ Athanaseus Javas Ramaila ]
