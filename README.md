@@ -66,13 +66,15 @@ won't be lost when the numpy array is deleted, nor when the python
 interpreter exits. To delete a shared array and reclaim system
 resources use the `SharedArray.delete()` function.
  
-### SharedArray.attach(name)
+### SharedArray.attach(name, ro=False)
 
 This function attaches a previously created array in shared memory
 identified by `name`, which can use the `file://` prefix to indicate
 that the array is stored as a file, or `shm://` to indicate that the
 array is stored as a POSIX shared memory object. For backward
-compatibility `shm://` is assumed when no prefix is given.
+compatibility `shm://` is assumed when no prefix is given. The
+optional parameter `ro` indicates that the array shall be attached
+read-only.
 
 An array may be simultaneously attached from multiple different
 processes (i.e. python interpreters).
