@@ -1,3 +1,3 @@
 version=4
 opts="searchmode=plain" \
- https://gitlab.com/tenzing/@PACKAGE@/tags?sort=updated_desc -/archive/v?\d[\d.]+/@PACKAGE@-@ANY_VERSION@@ARCHIVE_EXT@
+ https://gitlab.com/tenzing/shared-array/tags?sort=updated_desc -/archive/v?\d[\d.]+/shared-array-@ANY_VERSION@@ARCHIVE_EXT@
