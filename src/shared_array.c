@@ -1,6 +1,6 @@
 /*
  * This file is part of SharedArray.
- * Copyright (C) 2014-2017 Mathieu Mirmont <mat@parad0x.org>
+ * Copyright (C) 2014-2023 Mathieu Mirmont <mat@parad0x.org>
  *
  * SharedArray is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -59,8 +59,6 @@ static PyMethodDef module_functions[] = {
 	{ NULL, NULL, 0, NULL }
 };
 
-#if PY_MAJOR_VERSION >= 3
-
 /*
  * Module definition
  */
@@ -76,19 +74,10 @@ static struct PyModuleDef module_def = {
         NULL,			/* m_free	*/
 };
 
-/* Module creation function for python 3 */
-#define CREATE_MODULE(NAME, FUNCTIONS, DOCSTRING)	\
-	PyModule_Create(&module_def)
-#else
-/* Module creation function for python 2 */
-#define CREATE_MODULE(NAME, FUNCTIONS, DOCSTRING)	\
-	Py_InitModule3(NAME, FUNCTIONS, DOCSTRING)
-#endif
-
 /*
  * Module initialisation
  */
-static PyObject *module_init(void)
+PyObject *PyInit_SharedArray(void)
 {
 	PyObject *m;
 
@@ -96,7 +85,7 @@ static PyObject *module_init(void)
 	import_array1(NULL);
 
 	/* Register the module */
-	if (!(m = CREATE_MODULE(module_name, module_functions, module_docstring)))
+	if (!(m = PyModule_Create(&module_def)))
 		return NULL;
 
 	/* Register constants */
@@ -117,18 +106,3 @@ static PyObject *module_init(void)
 
 	return m;
 }
-
-/*
- * Python 2.7 compatibility blob
- */
-#if PY_MAJOR_VERSION >= 3
-PyMODINIT_FUNC PyInit_SharedArray(void)
-{
-	return module_init();
-}
-#else
-PyMODINIT_FUNC initSharedArray(void)
-{
-	module_init();
-}
-#endif

@@ -1,6 +1,6 @@
 #
 # This file is part of SharedArray.
-# Copyright (C) 2014-2017 Mathieu Mirmont <mat@parad0x.org>
+# Copyright (C) 2014-2023 Mathieu Mirmont <mat@parad0x.org>
 #
 # SharedArray is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,16 +24,7 @@ variables:
 before_script:
   - apt-get update
 
-build:python2:
-  stage: build
-  script:
-    - apt-get install -y libc6-dev gcc make python2-dev wget
-    - wget https://bootstrap.pypa.io/pip/2.7/get-pip.py -O get-pip.py
-    - python2 get-pip.py
-    - python2 -m pip install setuptools numpy
-    - python2 setup.py build_ext --inplace
-
-build:python3:
+build:
   stage: build
   script:
     - apt-get install -y libc6-dev gcc make python3-numpy python3-dev python3-setuptools

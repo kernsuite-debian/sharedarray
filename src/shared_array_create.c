@@ -54,6 +54,13 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 		return NULL;
 	}
 
+	/* Panic if the element size is zero. */
+	if (dtype->elsize == 0) {
+		PyErr_Format(PyExc_ValueError,
+		             "unsupported data type has element size of 0!");
+		return NULL;
+	}
+
 	/* Calculate the memory size of the array */
 	size = dtype->elsize;
 	for (i = 0; i < ndims; i++)
