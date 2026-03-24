@@ -9,9 +9,9 @@ Build-Depends:
  python3-dev,
  python3-setuptools,
  python3-numpy
-Standards-Version: 4.6.2.0
+Standards-Version: 4.7.2.0
 Homepage: https://gitlab.com/tenzing/shared-array
-X-Python3-Version: >= 3.10
+X-Python3-Version: >= 3.12
 Vcs-Git: https://github.com/kernsuite-debian/sharedarray
 Vcs-Browser: https://github.com/kernsuite-debian/sharedarray
 

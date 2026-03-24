@@ -1,3 +1,11 @@
+sharedarray (3.2.4-1kern1) noble; urgency=medium
+
+  [ Athanaseus Javas Ramaila ]
+  * New upstream version 3.2.4
+  * Build for noble
+
+ -- KERN packaging <packaging@kernsuite.info>  Tue, 24 Mar 2026 19:54:42 +0200
+
 sharedarray (3.2.3-1kern1) jammy; urgency=medium
 
   [ Athanaseus Javas Ramaila ]
