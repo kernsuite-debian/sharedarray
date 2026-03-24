@@ -58,4 +58,9 @@ extern PyObject *shared_array_list(PyObject *self, PyObject *args);
 extern int open_file(const char *name, int flags, mode_t mode);
 extern int unlink_file(const char *name);
 
+/* Numpy compability */
+#if NPY_ABI_VERSION < 0x02000000
+  #define PyDataType_ELSIZE(descr) ((descr)->elsize)
+#endif
+
 #endif /* !__SHARED_ARRAY_H__ */
