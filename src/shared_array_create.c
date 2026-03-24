@@ -55,14 +55,14 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 	}
 
 	/* Panic if the element size is zero. */
-	if (dtype->elsize == 0) {
+	if (PyDataType_ELSIZE(dtype) == 0) {
 		PyErr_Format(PyExc_ValueError,
 		             "unsupported data type has element size of 0!");
 		return NULL;
 	}
 
 	/* Calculate the memory size of the array */
-	size = dtype->elsize;
+	size = PyDataType_ELSIZE(dtype);
 	for (i = 0; i < ndims; i++)
 		size *= dims[i];
 
@@ -98,7 +98,7 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 	strncpy(meta->magic, SHARED_ARRAY_MAGIC, sizeof (meta->magic));
 	meta->size     = size;
 	meta->typenum  = dtype->type_num;
-	meta->itemsize = dtype->elsize;
+	meta->itemsize = PyDataType_ELSIZE(dtype);
 	meta->ndims    = ndims;
 	for (i = 0; i < ndims; i++)
 		meta->dims[i] = dims[i];
@@ -112,7 +112,7 @@ static PyObject *do_create(const char *name, int ndims, npy_intp *dims, PyArray_
 
 	/* Create the array object */
 	array = PyArray_New(&PyArray_Type, ndims, dims, dtype->type_num,
-	                    NULL, map_addr, dtype->elsize,
+	                    NULL, map_addr, PyDataType_ELSIZE(dtype),
 	                    NPY_ARRAY_CARRAY, NULL);
 
 	/* Attach MapOwner to the array */
